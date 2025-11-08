@@ -1,4 +1,4 @@
-name: mymumo
+name: mumo
 channels:
   - nvidia
   - conda-forge
