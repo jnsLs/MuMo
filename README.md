@@ -66,9 +66,35 @@ If you believe in Transformer and do not want to use Mamba-ssm, please use our m
 
 ```bash
 # Create and activate conda environment
-conda env create -f environment.yml
-conda activate mumo
+micromamba env create -f environment.yml
+eval "$($HOME/.local/bin/micromamba shell hook --shell bash)"
+micromamba activate mumo
 ```
+
+```bash
+pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.7.1+cu128 torchvision==0.22.1+cu128 torchaudio==2.7.1+cu128
+#Verify it now sees the GPU:
+python -c "import torch; print(torch.__version__, torch.cuda.get_device_capability(0), torch.cuda.get_arch_list())"
+```
+
+Load the correct cuda version (ds_config_zero2.json has CPU offload on, so it still compiles DeepSpeedCPUAdam. Make nvcc match torch's CUDA (12.8) and support sm_100)
+```bash
+module load cuda/12.8        # or cuda/12.x closest available
+export CUDA_HOME=$(dirname "$(dirname "$(which nvcc)")")
+nvcc --version               # confirm 12.8 (12.x acceptable)
+```
+
+optional: skip building for every arch, target just this GPU
+```bash
+export TORCH_CUDA_ARCH_LIST="10.0"
+```
+
+If there's no cuda module ≥12.8, install it into the env: 
+```bash
+micromamba install -n mumo -c conda-forge cuda-toolkit=12.8
+export CUDA_HOME=$CONDA_PREFIX
+``
+
 If you want to use the `Mamba-ssm` backbone and get the training and inference speed from mamba structure, install `causal-conv1d` and `mamba-ssm`:
 
 ```bash
