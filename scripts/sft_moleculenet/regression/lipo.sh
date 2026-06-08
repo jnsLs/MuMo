@@ -31,9 +31,7 @@ export WANDB_DIR="${output_model}/wandb"
     deepspeed --master_port $2 --include localhost:$3 ${BASE_DIR}/train/finetune.py \
     --run_name ${filename} \
         --model_name_or_path ${BASE_MODEL} \
-        --fp_tokenizer_path ${fp_tokenizer_path} \
         --config_name ${CONFIG_NAME} \
-        --functional_group False \
         --train_files ${DATA_DIR}/dataset/${DATATYPE}/${TASK_NAME}_${i}/raw/train_${TASK_NAME}_${i}.jsonl \
         --validation_files ${DATA_DIR}/dataset/${DATATYPE}/${TASK_NAME}_${i}/raw/test_${TASK_NAME}_${i}.jsonl \
         --test_files ${DATA_DIR}/dataset/${DATATYPE}/${TASK_NAME}_${i}/raw/test_${TASK_NAME}_${i}.jsonl \
@@ -42,8 +40,8 @@ export WANDB_DIR="${output_model}/wandb"
         --normlization True \
         --model_class ${MODEL_CLASS} \
         --task_type regression \
-        --per_device_train_batch_size 10 \
-        --per_device_eval_batch_size 10 \
+        --per_device_train_batch_size 1 \
+        --per_device_eval_batch_size 1 \
         --train_on_inputs True \
         --do_train \
         --do_eval \
@@ -65,7 +63,7 @@ export WANDB_DIR="${output_model}/wandb"
         --eval_steps 100 \
         --seed 42 \
         --disable_tqdm false \
-        --block_size 1024 \
+        --block_size 128 \
         --report_to wandb \
         --overwrite_output_dir \
         --ignore_data_skip true \
