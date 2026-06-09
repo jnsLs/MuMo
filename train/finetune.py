@@ -71,7 +71,7 @@ class ModelArguments:
         metadata={"help": "regression or classification"},
     )
     frozen_layer: Optional[int] = field(
-        default=-2,
+        default=None,
         metadata={
             "help": (
                 "Freeze the model's layer. None for no, -1 for all, 0 for only embedding, others define the backbone layers."
