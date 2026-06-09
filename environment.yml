@@ -1,8 +1,6 @@
 name: mumo
 channels:
-  - nvidia
   - conda-forge
-  - defaults
 dependencies:
   - python=3.11
   # - gcc_linux-64=12  # Commented out: can cause cross-compiler errors, system compilers work fine
