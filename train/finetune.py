@@ -70,12 +70,15 @@ class ModelArguments:
         default="regression",
         metadata={"help": "regression or classification"},
     )
-    frozen_layer: Optional[int] = field(
-        default=None,
+    finetune_strategy: Optional[str] = field(
+        default="full_finetune",
         metadata={
             "help": (
-                "Freeze the model's layer. None for no, -1 for all, 0 for only embedding, others define the backbone layers."
-            )
+                "How to adapt the pretrained model. "
+                "'full_finetune': train all parameters (backbone + pooler + task head). "
+                "'linear_probe': freeze the pretrained backbone and train only the pooler and task head."
+            ),
+            "choices": ["full_finetune", "linear_probe"],
         },
     )
     config_overrides: Optional[str] = field(
@@ -314,6 +317,43 @@ type_map = {
     "bafra_edge_attr": torch.float32,
     "smiles": str,
 }
+
+
+def apply_finetune_strategy(model, strategy):
+    """
+    Configure which parameters are trainable according to the finetuning strategy.
+
+    - "full_finetune": every parameter stays trainable.
+    - "linear_probe": freeze the pretrained backbone and train only the newly
+      initialized pooler(s) and task head.
+
+    Returns the model for convenience.
+    """
+    print(model)
+    if strategy == "full_finetune":
+        for param in model.parameters():
+            param.requires_grad = True
+    elif strategy == "linear_probe":
+        if not hasattr(model, "backbone"):
+            raise ValueError(
+                "linear_probe requires the model to expose a `backbone` attribute "
+                f"to freeze, but {model.__class__.__name__} does not."
+            )
+        for param in model.parameters():
+            param.requires_grad = True
+        for param in model.backbone.parameters():
+            param.requires_grad = False
+    else:
+        raise ValueError(f"Unknown finetune_strategy: {strategy}")
+
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    total = sum(p.numel() for p in model.parameters())
+    logger.info(
+        f"Finetune strategy '{strategy}': "
+        f"{trainable:,} / {total:,} parameters trainable "
+        f"({100 * trainable / total:.2f}%)."
+    )
+    return model
 
 
 def main():
@@ -587,6 +627,7 @@ def main():
         model = load_model(config, tokenizer, training_args, model_args)
 
         model.initialize_parameters()
+        apply_finetune_strategy(model, model_args.finetune_strategy)
     else:
         raise ValueError(
             "For finetuning stage, you have to load a exiting pretrained model."

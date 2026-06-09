@@ -46,7 +46,7 @@ deepspeed --master_port 29507 --include localhost:7 ${BASE_DIR}/train/finetune.p
     --use_fast_tokenizer false \
     --output_dir ${output_model} \
     --max_eval_samples 1000 \
-    --frozen_layer -2 \
+    --finetune_strategy full_finetune \
     --learning_rate 3e-5 \
     --lr_scheduler_type linear \
     --gradient_accumulation_steps 1 \
