@@ -33,6 +33,21 @@ from transformers.utils.versions import require_version
 from sklearn.metrics import accuracy_score
 
 
+# PyTorch >= 2.6 changed torch.load's default to weights_only=True, which fails to
+# unpickle the numpy objects in Trainer checkpoints (rng_state.pth, optimizer/scheduler
+# states) and breaks resume_from_checkpoint. These checkpoints are self-produced and
+# trusted, so restore the previous full-unpickle behavior.
+_orig_torch_load = torch.load
+
+
+def _torch_load_full(*args, **kwargs):
+    kwargs.setdefault("weights_only", False)
+    return _orig_torch_load(*args, **kwargs)
+
+
+torch.load = _torch_load_full
+
+
 logger = logging.getLogger(__name__)
 
 MODEL_CONFIG_CLASSES = list(MODEL_FOR_CAUSAL_LM_MAPPING.keys())
